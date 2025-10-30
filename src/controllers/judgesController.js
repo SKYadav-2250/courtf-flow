@@ -37,7 +37,7 @@ class JudgesController {
       const judge = new this.JudgeModel(judgeData);
       await judge.save();
 
-      console.log("Judge Saved:", judge);
+      
       res.status(201).json(judge);
     } catch (error) {
       console.error("Error Creating Judge:", error);
@@ -70,15 +70,30 @@ async getJudgeById(req, res) {
 }
 
 
-  async updateJudge(req, res) {
-    try {
-      const judge = await this.JudgeModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-      if (!judge) return res.status(404).json({ message: "Judge not found" });
-      res.status(200).json(judge);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+// ➤ Update Judge
+// ➤ Update Judge
+async updateJudge(req, res) {
+  try {
+    const updatedJudge = await this.JudgeModel.findOneAndUpdate(
+      { judgeId: req.params.id },   // use judgeId instead of _id
+      req.body,
+      { new: true }                 // return updated document
+    );
+
+    if (!updatedJudge) {
+      return res.status(404).json({ message: "Judge not found" });
     }
+
+    res.status(200).json({
+      message: "Judge updated successfully",
+      updatedJudge
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
+}
+
+
 async deleteJudge(req, res) {
   try {
     const { id } = req.params; // Example: J9087

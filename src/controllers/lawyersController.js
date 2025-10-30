@@ -19,26 +19,50 @@ class LawyersController {
   }
 
   // ✅ Create Lawyer with unique ID
-  async createLawyer(req, res) {
-    try {
-      if (!req.body || Object.keys(req.body).length === 0)
-        return res.status(400).json({ message: "Request body cannot be empty" });
+async createLawyer(req, res) {
+  try {
+    const { name, barNumber, email, phone, specialization } = req.body;
 
-      const lawyerId = await this.generateUniqueLawyerId();
-
-      const lawyerData = {
-        ...req.body,
-        lawyerId, // Add unique lawyerId
-      };
-
-      const lawyer = new this.LawyerModel(lawyerData);
-      await lawyer.save();
-
-      res.status(201).json(lawyer);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+    if (!name || !barNumber || !email || !phone || !specialization) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
+
+    // Check for duplicate email or bar number
+    const existingLawyer = await this.LawyerModel.findOne({
+      $or: [{ email }, { barNumber }]
+    });
+
+    if (existingLawyer) {
+      return res.status(400).json({ message: 'Email or Bar Number already exists' });
+    }
+
+    // Generate unique Lawyer ID
+    const lastLawyer = await this.LawyerModel.findOne().sort({ createdAt: -1 });
+    const lastId = lastLawyer ? parseInt(lastLawyer.lawyerId.replace('L', '')) : 1000;
+    const lawyerId = `L${lastId + 1}`;
+
+    const lawyer = new this.LawyerModel({
+      lawyerId,
+      name,
+      barNumber,
+      email,
+      phone,
+      specialization
+    });
+
+    await lawyer.save();
+
+    // ✅ Response with message + lawyer data
+    res.status(201).json({
+      message: "Lawyer created successfully",
+      lawyer
+    });
+
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
+}
+
 
   // ✅ Get all lawyers
   async getLawyers(req, res) {
@@ -65,10 +89,25 @@ class LawyersController {
     }
   }
 
-  // ✅ Update by lawyerId
-  async updateLawyer(req, res) {
+
+  
+    async updateLawyer(req, res) {
     try {
       const { id } = req.params;
+      const { email } = req.body;
+
+      if (email) {
+        const existingLawyer = await this.LawyerModel.findOne({
+          email,
+          lawyerId: { $ne: id },
+        });
+        if (existingLawyer) {
+          return res.status(400).json({
+            message: "Another lawyer already exists with this email",
+          });
+        }
+      }
+
       const lawyer = await this.LawyerModel.findOneAndUpdate(
         { lawyerId: id },
         req.body,
@@ -78,11 +117,16 @@ class LawyersController {
       if (!lawyer)
         return res.status(404).json({ message: "Lawyer not found" });
 
-      res.status(200).json(lawyer);
+      res.status(200).json({
+        message: "Lawyer updated successfully",
+        lawyer,
+      });
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
   }
+
+
 
   // ✅ Delete by lawyerId
   async deleteLawyer(req, res) {

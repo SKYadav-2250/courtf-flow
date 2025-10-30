@@ -6,7 +6,7 @@ class CourtroomsController {
   // ➤ Create courtroom
   async createCourtroom(req, res) {
     try {
-      console.log("req is sjs");
+     
 
       if (!req.body || Object.keys(req.body).length === 0)
         return res.status(400).json({ message: 'Request body cannot be empty' });
@@ -50,20 +50,33 @@ class CourtroomsController {
   }
 
   // ➤ Update courtroom
-  async updateCourtroom(req, res) {
-    try {
-      const updatedCourtroom = await this.Courtroom.findOneAndUpdate(
-        { courtroomId: req.params.id },
-        req.body,
-        { new: true }
-      );
-      if (!updatedCourtroom)
-        return res.status(404).json({ message: 'Courtroom not found' });
-      res.status(200).json(updatedCourtroom);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+async updateCourtroom(req, res) {
+  try {
+    const updatedCourtroom = await this.Courtroom.findOneAndUpdate(
+      { number: req.params.id },
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCourtroom) {
+      return res.status(404).json({ message: "Courtroom not found" });
     }
+
+    res.status(200).json({
+      message: "Courtroom updated successfully",
+      courtroom: updatedCourtroom
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: `Duplicate value detected for field: ${
+          Object.keys(error.keyValue)[0]
+        }`
+      });
+    }
+    res.status(400).json({ message: error.message });
   }
+}
 
   // ➤ Delete courtroom by number
   async deleteCourtroom(req, res) {
@@ -73,8 +86,8 @@ class CourtroomsController {
         return res.status(404).json({ message: 'Courtroom not found' });
 
       res.status(200).json({
-        message: 'Courtroom deleted successfully',
-        deletedCourtroom
+        message: `Courtroom deleted successfully room number ${req.params.id}`,
+        
       });
     } catch (error) {
       res.status(500).json({ message: error.message });

@@ -14,6 +14,12 @@ const caseSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    caseType: {
+        type: String,
+        required: true,
+        enum: ['Criminal', 'Civil', 'Family', 'Corporate', 'Constitutional', 'Other'],
+        default: 'Other'
+    },
     judge: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Judge',
