@@ -24,6 +24,7 @@ app.use('/api/courtrooms', courtroomsRoutes);
 app.use('/api/judges', judgesRoutes);
 app.use('/api/lawyers', lawyersRoutes);
 
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
