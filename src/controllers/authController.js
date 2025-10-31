@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
-const JWT_EXPIRES_IN = '7d';
+
+
 
 function generateToken(user) {
   return jwt.sign(
@@ -10,10 +10,11 @@ function generateToken(user) {
       id: user._id,
       username: user.username,
       email: user.email,
+      number:user.number,
       role: user.role,
     },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+   process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN }
   );
 }
 
@@ -21,17 +22,24 @@ function generateToken(user) {
 export const registerUser = async (req, res) => {
   try {
     const { username, email,number, password, role } = req.body;
+    console.log(`user  ${JSON.stringify(req.user)}`);
 
     if (!username || !email || !password || !number) {
       return res.status(400).json({ success: false, message: 'Username, email, and password are required.' });
     }
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Username or email already exists.' });
-    }
+    const existingUser = await User.findOne({
+      $or: [{ email }]
+    });
 
+    
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'user number or email already exists.' });
+    }
+    
+ 
     const newUser = await User.create({ username, email, password, number, role });
+   
 
     const token = generateToken(newUser);
 
