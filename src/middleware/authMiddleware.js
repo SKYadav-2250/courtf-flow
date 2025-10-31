@@ -7,7 +7,7 @@ export const protect = async (req, res, next) => {
     const authHeader = req.headers.authorization || '';
     const [scheme, token] = authHeader.split(' ');
 
-    console.log(`Token: ${token} ---- Scheme: ${scheme}`);
+    
 
     if (scheme !== 'Bearer' || !token) {
       return res.status(401).json({ 
@@ -25,7 +25,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    console.log(`JWT Secret available: ${process.env.JWT_SECRET}`);
+
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log(`Decoded token:`, decoded);

@@ -18,7 +18,7 @@ const clerkSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    unique: true  // ✅ Prevent duplicate phone numbers
+ 
   },
        role:{
     type:String,

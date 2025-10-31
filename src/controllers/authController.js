@@ -18,7 +18,7 @@ function generateToken(user) {
   );
 }
 
-// Register a new user and return JWT
+
 export const registerUser = async (req, res) => {
   try {
     const { username, email,number, password, role } = req.body;
@@ -96,6 +96,57 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Login failed.', error: error.message });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    // require authentication + admin role
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden: admin only' });
+    }
+
+    const users = await User.find().select('-password');
+    return res.status(200).json({ success: true, count: users.length, users });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch users.', error: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    // admin only
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden: admin only' });
+    }
+
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    return res.status(200).json({ success: true, message: 'User deleted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to delete user.', error: error.message });
+  }
+};
+
+export const deleteMe = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Not authenticated.' });
+    }
+
+    const deleted = await User.findByIdAndDelete(req.user.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Your account has been deleted.' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to delete account.', error: error.message });
   }
 };
 

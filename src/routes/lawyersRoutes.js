@@ -9,7 +9,7 @@ const lawyersController = new LawyersController(Lawyer);
 router.post("/", protect, authorizeRoles('admin'), (req, res) => lawyersController.createLawyer(req, res));
 router.get("/", protect, (req, res) => lawyersController.getLawyers(req, res));
 router.get("/:id", protect, (req, res) => lawyersController.getLawyerById(req, res));
-router.put("/:id", protect, (req, res) => lawyersController.updateLawyer(req, res));
-router.delete("/:id", protect, (req, res) => lawyersController.deleteLawyer(req, res));
+router.put("/:id", protect,authorizeRoles('admin','lawyer'), (req, res) => lawyersController.updateLawyer(req, res));
+router.delete("/:id", protect,authorizeRoles('admin'), (req, res) => lawyersController.deleteLawyer(req, res));
 
 export default router;

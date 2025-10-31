@@ -10,10 +10,10 @@ import { protect } from '../middleware/authMiddleware.js';
 const courtroomController = new CourtroomsController(Courtroom);
 
 // ✅ Define routes
-router.post('/', protect, (req, res) => courtroomController.createCourtroom(req, res));
+router.post('/', protect, authorizeRoles('admin', 'clerk'), (req, res) => courtroomController.createCourtroom(req, res));
 router.get('/', protect, (req, res) => courtroomController.getCourtrooms(req, res));
 router.get('/:id', protect, (req, res) => courtroomController.getCourtroomById(req, res));
-router.put('/:id', protect, (req, res) => courtroomController.updateCourtroom(req, res));
-router.delete('/:id', protect, (req, res) => courtroomController.deleteCourtroom(req, res));
+router.put('/:id', protect, authorizeRoles('admin', 'clerk'), (req, res) => courtroomController.updateCourtroom(req, res));
+router.delete('/:id', protect, authorizeRoles('admin', 'clerk'), (req, res) => courtroomController.deleteCourtroom(req, res));
 
 export default router;

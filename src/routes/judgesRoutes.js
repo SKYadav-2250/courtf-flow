@@ -12,7 +12,7 @@ const judgesController = new JudgesController(Judge);
 router.post("/", protect, authorizeRoles('admin'), (req, res) => judgesController.createJudge(req, res));
 router.get("/", protect, (req, res) => judgesController.getJudges(req, res));
 router.get("/:id", protect, (req, res) => judgesController.getJudgeById(req, res));
-router.put("/:id", protect, (req, res) => judgesController.updateJudge(req, res));
-router.delete("/:id", protect, (req, res) => judgesController.deleteJudge(req, res));
+router.put("/:id", protect,authorizeRoles('admin','judge'), (req, res) => judgesController.updateJudge(req, res));
+router.delete("/:id", protect,authorizeRoles('admin'), (req, res) => judgesController.deleteJudge(req, res));
 
 export default router;

@@ -1,14 +1,17 @@
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/authController.js';
+import {
+  registerUser,
+  loginUser,
+  getAllUsers,
+  deleteUser,
+  deleteMe
+} from '../controllers/authController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// POST /api/auth/register
+// POST /api/auth/register (admin only)
 router.post('/register', protect, authorizeRoles('admin'), registerUser);
-// router.post('/register', registerUser);
-// router.post('/register', registerUser);
-
 
 // POST /api/auth/login
 router.post('/login', loginUser);
@@ -21,6 +24,15 @@ router.get('/profile', protect, (req, res) => {
     user: req.user,
   });
 });
+
+// GET /api/auth/users (admin only) - fetch all users
+router.get('/users', protect, authorizeRoles('admin'), getAllUsers);
+
+// DELETE /api/auth/users/:id (admin only) - delete user by id
+router.delete('/users/:id', protect, authorizeRoles('admin'), deleteUser);
+
+// DELETE /api/auth/me (authenticated user) - delete own account
+router.delete('/me', protect , deleteMe);
 
 export default router;
 

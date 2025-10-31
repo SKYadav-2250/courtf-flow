@@ -6,15 +6,15 @@ import Case from '../models/caseModel.js';
 
 // ✅ Import controller
 import CasesController from '../controllers/casesController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 // ✅ Pass model when creating controller instance
 const casesController = new CasesController(Case);
 
-router.post('/', protect, casesController.createCase.bind(casesController));
-router.get('/', protect, casesController.getCases.bind(casesController));
-router.get('/:id', protect, casesController.getCaseById.bind(casesController));
-router.put('/:id', protect, casesController.updateCase.bind(casesController));
-router.delete('/:id', protect, casesController.deleteCase.bind(casesController));
+router.post('/', protect, authorizeRoles('admin', 'clerk'), casesController.createCase.bind(casesController));
+router.get('/', protect, authorizeRoles('admin', 'clerk'), casesController.getCases.bind(casesController));
+router.get('/:id', protect, authorizeRoles('admin', 'clerk'), casesController.getCaseById.bind(casesController));
+router.put('/:id', protect, authorizeRoles('admin', 'clerk'), casesController.updateCase.bind(casesController));
+router.delete('/:id', protect, authorizeRoles('admin', 'clerk'), casesController.deleteCase.bind(casesController));
 
 export default router;

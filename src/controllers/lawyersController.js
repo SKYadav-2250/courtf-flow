@@ -3,7 +3,7 @@ class LawyersController {
     this.LawyerModel = LawyerModel;
   }
 
-  // Generate unique Lawyer ID (Lxxxx)
+  
   async generateUniqueLawyerId() {
     let lawyerId;
     let exists = true;
