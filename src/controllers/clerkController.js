@@ -106,4 +106,4 @@ async createClerk(req, res) {
   }
 }
 
-module.exports = ClerksController;
+export default ClerksController;

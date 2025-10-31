@@ -95,4 +95,4 @@ async updateCourtroom(req, res) {
   }
 }
 
-module.exports = CourtroomsController;
+export default CourtroomsController;

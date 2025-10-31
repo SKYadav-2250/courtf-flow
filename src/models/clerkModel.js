@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const clerkSchema = new mongoose.Schema({
   clerkId: {
@@ -20,6 +20,11 @@ const clerkSchema = new mongoose.Schema({
     required: true,
     unique: true  // ✅ Prevent duplicate phone numbers
   },
+       role:{
+    type:String,
+    default:'clerk'
+    
+  },
   assignedCourtroom: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Courtroom', // ✅ Must exactly match model name
@@ -31,4 +36,4 @@ const clerkSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Clerk', clerkSchema);
+export default mongoose.model('Clerk', clerkSchema);

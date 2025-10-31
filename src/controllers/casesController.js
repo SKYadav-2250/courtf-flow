@@ -117,4 +117,4 @@ class CasesController {
   }
 }
 
-module.exports = CasesController;
+export default CasesController;

@@ -1,8 +1,8 @@
 // judgeRoutes.js
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const Judge = require("../models/judgeModel"); // ✅ Mongoose model import
-const JudgesController = require("../controllers/JudgesController");
+import Judge from "../models/judgeModel.js"; // ✅ Mongoose model import
+import JudgesController from "../controllers/JudgesController.js";
 
 // ✅ Create controller instance with the model
 const judgesController = new JudgesController(Judge);
@@ -14,4 +14,4 @@ router.get("/:id", (req, res) => judgesController.getJudgeById(req, res));
 router.put("/:id", (req, res) => judgesController.updateJudge(req, res));
 router.delete("/:id", (req, res) => judgesController.deleteJudge(req, res));
 
-module.exports = router;
+export default router;

@@ -1,7 +1,7 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const Lawyer = require("../models/lawyerModel");
-const LawyersController = require("../controllers/LawyersController");
+import Lawyer from "../models/lawyerModel.js";
+import LawyersController from "../controllers/LawyersController.js";
 
 const lawyersController = new LawyersController(Lawyer);
 
@@ -11,4 +11,4 @@ router.get("/:id", (req, res) => lawyersController.getLawyerById(req, res));
 router.put("/:id", (req, res) => lawyersController.updateLawyer(req, res));
 router.delete("/:id", (req, res) => lawyersController.deleteLawyer(req, res));
 
-module.exports = router;
+export default router;

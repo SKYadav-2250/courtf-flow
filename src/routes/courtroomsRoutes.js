@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // ✅ Import model and controller
-const Courtroom = require('../models/courtroomModel');
-const CourtroomsController = require('../controllers/CourtroomsController');
+import Courtroom from '../models/courtroomModel.js';
+import CourtroomsController from '../controllers/CourtroomsController.js';
 
 // ✅ Instantiate controller with model
 const courtroomController = new CourtroomsController(Courtroom);
@@ -15,4 +15,4 @@ router.get('/:id', (req, res) => courtroomController.getCourtroomById(req, res))
 router.put('/:id', (req, res) => courtroomController.updateCourtroom(req, res));
 router.delete('/:id', (req, res) => courtroomController.deleteCourtroom(req, res));
 
-module.exports = router;
+export default router;

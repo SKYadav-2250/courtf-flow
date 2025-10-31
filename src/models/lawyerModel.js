@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const lawyerSchema = new mongoose.Schema(
   {
@@ -25,6 +25,11 @@ const lawyerSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+      role:{
+    type:String,
+    default:'lawyer'
+    
+  },
     specialization: {
       type: String,
       required: true,
@@ -50,4 +55,4 @@ const lawyerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Lawyer", lawyerSchema);
+export default mongoose.model("Lawyer", lawyerSchema);

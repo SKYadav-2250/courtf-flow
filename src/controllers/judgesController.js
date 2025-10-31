@@ -111,4 +111,4 @@ async deleteJudge(req, res) {
 
 }
 
-module.exports = JudgesController;
+export default JudgesController;

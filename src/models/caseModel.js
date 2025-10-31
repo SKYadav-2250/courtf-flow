@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const caseSchema = new mongoose.Schema({
     caseId: {
@@ -45,6 +45,9 @@ const caseSchema = new mongoose.Schema({
         enum: ['Pending', 'In Progress', 'Closed'],
         default: 'Pending'
     },
+    nextDate:{
+        type:Date,
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -77,4 +80,4 @@ caseSchema.pre('validate', async function (next) {
     next();
 });
 
-module.exports = mongoose.model('Case', caseSchema);
+export default mongoose.model('Case', caseSchema);

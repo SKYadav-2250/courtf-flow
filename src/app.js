@@ -1,11 +1,12 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const connectDB = require('./config/database');
-const casesRoutes = require('./routes/casesRoutes');
-const courtroomsRoutes = require('./routes/courtroomsRoutes');
-const judgesRoutes = require('./routes/judgesRoutes');
-const lawyersRoutes = require('./routes/lawyersRoutes');
-const clerksRoutes = require('./routes/clerkRoutes');
+import express from 'express';
+import dotenv from 'dotenv';
+import connectDB from './config/database.js';
+import casesRoutes from './routes/casesRoutes.js';
+import courtroomsRoutes from './routes/courtroomsRoutes.js';
+import judgesRoutes from './routes/judgesRoutes.js';
+import lawyersRoutes from './routes/lawyersRoutes.js';
+import clerksRoutes from './routes/clerkRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
@@ -19,10 +20,11 @@ connectDB();
 
 // Routes
 app.use('/api/cases', casesRoutes);
-app.use('/api/clerks', clerksRoutes);
+app.use('/api/clerks',  clerksRoutes);
 app.use('/api/courtrooms', courtroomsRoutes);
 app.use('/api/judges', judgesRoutes);
 app.use('/api/lawyers', lawyersRoutes);
+app.use('/api/users', authRoutes);
 
 
 app.listen(PORT, () => {

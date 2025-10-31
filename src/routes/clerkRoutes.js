@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const ClerksController = require('../controllers/clerkController');
-const Clerk = require('../models/clerkModel');
+import ClerksController from '../controllers/clerkController.js';
+import Clerk from '../models/clerkModel.js';
 
 const clerksController = new ClerksController(Clerk);
 
@@ -11,4 +11,4 @@ router.get('/:id', (req, res) => clerksController.getClerkById(req, res));
 router.put('/:id', (req, res) => clerksController.updateClerk(req, res));
 router.delete('/:id', (req, res) => clerksController.deleteClerk(req, res));
 
-module.exports = router;
+export default router;

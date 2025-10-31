@@ -146,4 +146,4 @@ async createLawyer(req, res) {
   }
 }
 
-module.exports = LawyersController;
+export default LawyersController;

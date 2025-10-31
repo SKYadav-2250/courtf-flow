@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // ✅ Import model
-const Case = require('../models/caseModel');
+import Case from '../models/caseModel.js';
 
 // ✅ Import controller
-const CasesController = require('../controllers/casesController');
+import CasesController from '../controllers/casesController.js';
 
 // ✅ Pass model when creating controller instance
 const casesController = new CasesController(Case);
@@ -16,4 +16,4 @@ router.get('/:id', casesController.getCaseById.bind(casesController));
 router.put('/:id', casesController.updateCase.bind(casesController));
 router.delete('/:id', casesController.deleteCase.bind(casesController));
 
-module.exports = router;
+export default router;

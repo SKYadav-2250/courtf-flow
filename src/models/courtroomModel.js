@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const courtroomSchema = new mongoose.Schema({
   courtroomId: {
@@ -33,4 +33,4 @@ courtroomSchema.pre('save', async function (next) {
   next();
 });
 
-module.exports = mongoose.model('Courtroom', courtroomSchema);
+export default mongoose.model('Courtroom', courtroomSchema);

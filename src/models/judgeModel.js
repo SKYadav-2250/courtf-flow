@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const judgeSchema = new mongoose.Schema({
   judgeId: { type: String, required: true, unique: true }, // unique Judge ID
@@ -6,6 +6,11 @@ const judgeSchema = new mongoose.Schema({
   court: String,
   experience: Number,
   contact: String,
+  role:{
+    type:String,
+    default:'judge'
+    
+  }
 });
 
-module.exports = mongoose.model("Judge", judgeSchema);
+export default mongoose.model("Judge", judgeSchema);
