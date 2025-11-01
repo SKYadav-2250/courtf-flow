@@ -1,3 +1,5 @@
+import User from '../models/User.js'; // Import User model
+
 class JudgesController {
   constructor(JudgeModel) {
     this.JudgeModel = JudgeModel;
@@ -21,26 +23,40 @@ class JudgesController {
 
   async createJudge(req, res) {
     try {
-      console.log("Incoming Data:", req.body);
+      const { name, court, experience, contact, password } = req.body;
 
-      if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ message: "Request body cannot be empty" });
+      if (!name || !court || !experience || !contact || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
       }
 
       // Generate a unique Judge ID
       const judgeId = await this.generateUniqueJudgeId();
 
-      // Merge the judgeId into the request body
-      const judgeData = { ...req.body, judgeId };
-
       // Create and save the judge
-      const judge = new this.JudgeModel(judgeData);
+      const judge = new this.JudgeModel({
+        judgeId,
+        name,
+        court,
+        experience,
+        contact
+      });
       await judge.save();
 
-      
-      res.status(201).json(judge);
+      // ✅ Add judge to User model for login
+      const newUser = new User({
+        username: name,
+        email: `${judgeId}@court.com`, // Generate a dummy email if not provided
+        number: contact,
+        password,
+        role: 'judge'
+      });
+      await newUser.save();
+
+      res.status(201).json({
+        message: 'Judge created successfully and registered for login',
+        judge
+      });
     } catch (error) {
-      console.error("Error Creating Judge:", error);
       res.status(400).json({ message: error.message });
     }
   }

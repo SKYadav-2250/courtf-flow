@@ -1,3 +1,5 @@
+import User from '../models/User.js'; // Import User model
+
 class LawyersController {
   constructor(LawyerModel) {
     this.LawyerModel = LawyerModel;
@@ -19,50 +21,58 @@ class LawyersController {
   }
 
   // ✅ Create Lawyer with unique ID
-async createLawyer(req, res) {
-  try {
-    const { name, barNumber, email, phone, specialization } = req.body;
+  async createLawyer(req, res) {
+    try {
+      const { name, barNumber, email, phone, password, specialization } = req.body;
 
-    if (!name || !barNumber || !email || !phone || !specialization) {
-      return res.status(400).json({ message: 'All fields are required' });
+      if (!name || !barNumber || !email || !phone || !password || !specialization) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      // Check for duplicate email or bar number
+      const existingLawyer = await this.LawyerModel.findOne({
+        $or: [{ email }, { barNumber }]
+      });
+
+      if (existingLawyer) {
+        return res.status(400).json({ message: 'Email or Bar Number already exists' });
+      }
+
+      // Generate unique Lawyer ID
+      const lastLawyer = await this.LawyerModel.findOne().sort({ createdAt: -1 });
+      const lastId = lastLawyer ? parseInt(lastLawyer.lawyerId.replace('L', '')) : 1000;
+      const lawyerId = `L${lastId + 1}`;
+
+      const lawyer = new this.LawyerModel({
+        lawyerId,
+        name,
+        barNumber,
+        email,
+        phone,
+        specialization
+      });
+
+      await lawyer.save();
+
+      // ✅ Add lawyer to User model for login
+      const newUser = new User({
+        username: name,
+        email,
+        number: phone,
+        password,
+        role: 'lawyer'
+      });
+      await newUser.save();
+
+      // ✅ Response with message + lawyer data
+      res.status(201).json({
+        message: 'Lawyer created successfully and registered for login',
+        lawyer
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-
-    // Check for duplicate email or bar number
-    const existingLawyer = await this.LawyerModel.findOne({
-      $or: [{ email }, { barNumber }]
-    });
-
-    if (existingLawyer) {
-      return res.status(400).json({ message: 'Email or Bar Number already exists' });
-    }
-
-    // Generate unique Lawyer ID
-    const lastLawyer = await this.LawyerModel.findOne().sort({ createdAt: -1 });
-    const lastId = lastLawyer ? parseInt(lastLawyer.lawyerId.replace('L', '')) : 1000;
-    const lawyerId = `L${lastId + 1}`;
-
-    const lawyer = new this.LawyerModel({
-      lawyerId,
-      name,
-      barNumber,
-      email,
-      phone,
-      specialization
-    });
-
-    await lawyer.save();
-
-    // ✅ Response with message + lawyer data
-    res.status(201).json({
-      message: "Lawyer created successfully",
-      lawyer
-    });
-
-  } catch (error) {
-    res.status(400).json({ message: error.message });
   }
-}
-
 
   // ✅ Get all lawyers
   async getLawyers(req, res) {

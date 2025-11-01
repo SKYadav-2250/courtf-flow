@@ -3,10 +3,12 @@ const router = express.Router();
 import ClerksController from '../controllers/clerkController.js';
 import Clerk from '../models/clerkModel.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
-
+import { registerUser } from "../controllers/authController.js";
 const clerksController = new ClerksController(Clerk);
 
 router.post('/', protect, authorizeRoles('admin'), (req, res) => clerksController.createClerk(req, res));
+// router.post('/', protect, authorizeRoles('admin'), registerUser);
+
 router.get('/', protect, (req, res) => clerksController.getClerks(req, res));
 router.get('/:id', protect, (req, res) => clerksController.getClerkById(req, res));
 router.put('/:id', protect,authorizeRoles('admin','clerk'), (req, res) => clerksController.updateClerk(req, res));

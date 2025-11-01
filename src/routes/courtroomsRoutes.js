@@ -5,6 +5,7 @@ const router = express.Router();
 import Courtroom from '../models/courtroomModel.js';
 import CourtroomsController from '../controllers/courtroomsController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { authorizeRoles } from '../middleware/authMiddleware.js';
 
 // ✅ Instantiate controller with model
 const courtroomController = new CourtroomsController(Courtroom);

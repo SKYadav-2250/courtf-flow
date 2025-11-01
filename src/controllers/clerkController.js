@@ -1,49 +1,63 @@
+import User from '../models/User.js'; // Import User model
+
 class ClerksController {
   constructor(ClerkModel) {
     this.ClerkModel = ClerkModel;
   }
 
   // ➤ Create Clerk
-async createClerk(req, res) {
-  try {
-    const { name, email, phone, assignedCourtroom } = req.body;
+  async createClerk(req, res) {
+    try {
+      const { name, email, phone, password, assignedCourtroom } = req.body;
 
-    if (!name || !email || !phone)
-      return res.status(400).json({ message: 'Name, email, and phone are required' });
+      if (!name || !email || !phone || !password)
+        return res.status(400).json({ message: 'Name, email, phone, and password are required' });
 
-    // ✅ Check duplicate email or phone
-    const existingClerk = await this.ClerkModel.findOne({
-      $or: [{ email }, { phone }]
-    });
-    if (existingClerk) {
-      return res.status(400).json({ message: 'Clerk with this email or phone already exists' });
+      // ✅ Check duplicate email or phone
+      const existingClerk = await this.ClerkModel.findOne({
+        $or: [{ email }, { phone }]
+      });
+      if (existingClerk) {
+        return res.status(400).json({ message: 'Clerk with this email or phone already exists' });
+      }
+
+      // ✅ Generate unique clerkId (C1001, C1002...)
+      const lastClerk = await this.ClerkModel.findOne().sort({ createdAt: -1 });
+      const lastId = lastClerk ? parseInt(lastClerk.clerkId.replace('C', '')) : 1000;
+      const clerkId = `C${lastId + 1}`;
+
+      // ✅ Save new clerk
+      const newClerk = new this.ClerkModel({
+        clerkId,
+        name,
+        email,
+        phone,
+        assignedCourtroom
+      });
+      await newClerk.save();
+
+      // ✅ Add clerk to User model for login
+      const newUser = new User({
+        username: name,
+        email,
+        number: phone,
+        password,
+        role: 'clerk'
+      });
+      await newUser.save();
+
+      // ✅ Populate assigned courtroom details properly
+      const populatedClerk = await this.ClerkModel.findById(newClerk._id)
+        .populate('assignedCourtroom', 'courtroomId name location number capacity');
+
+      res.status(201).json({
+        message: 'Clerk created successfully and registered for login',
+        clerk: populatedClerk
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-
-    // ✅ Generate unique clerkId (C1001, C1002...)
-    const lastClerk = await this.ClerkModel.findOne().sort({ createdAt: -1 });
-    const lastId = lastClerk ? parseInt(lastClerk.clerkId.replace('C', '')) : 1000;
-    const clerkId = `C${lastId + 1}`;
-
-    // ✅ Save new clerk
-    const newClerk = new this.ClerkModel({
-      clerkId,
-      name,
-      email,
-      phone,
-      assignedCourtroom
-    });
-    await newClerk.save();
-
-    // ✅ Populate assigned courtroom details properly
-    const populatedClerk = await this.ClerkModel.findById(newClerk._id)
-      .populate('assignedCourtroom', 'courtroomId name location number capacity');
-
-    res.status(201).json(populatedClerk);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
   }
-}
-
 
   // ➤ Get All Clerks
   async getClerks(req, res) {

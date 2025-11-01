@@ -10,7 +10,12 @@ const judgeSchema = new mongoose.Schema({
     type:String,
     default:'judge'
     
-  }
+  },    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false,
+    },
 });
 
 export default mongoose.model("Judge", judgeSchema);
