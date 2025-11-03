@@ -14,10 +14,13 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
     },
-    number:{
-      type:String,
-     required:true
+    number: {
+      type: String,
+      required: true,
+      trim: true,
+      match: [/^\d{10}$/, 'Please provide a valid 10-digit phone number'],
     },
     password: {
       type: String,
@@ -50,5 +53,9 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 export default User;
+
+
+
+
 
 

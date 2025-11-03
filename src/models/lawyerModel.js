@@ -19,16 +19,22 @@ const lawyerSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true
-    },    password: {
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
+    },
+    password: {
       type: String,
       required: true,
       minlength: 6,
       select: false,
     },
-    phone: {
+    number: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
+      match: [/^\d{10}$/, 'Please provide a valid 10-digit phone number'],
     },
       role:{
     type:String,

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const clerkSchema = new mongoose.Schema({
   clerkId: {
@@ -19,12 +20,16 @@ const clerkSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
   },
-  phone: {
+  number: {
     type: String,
     required: true,
- 
+    trim: true,
+    match: [/^\d{10}$/, 'Please provide a valid 10-digit phone number'],
   },
        role:{
     type:String,
@@ -40,6 +45,13 @@ const clerkSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+});
+
+clerkSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const saltRounds = 10;
+  this.password = await bcrypt.hash(this.password, saltRounds);
+  next();
 });
 
 export default mongoose.model('Clerk', clerkSchema);
