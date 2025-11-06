@@ -11,7 +11,8 @@ import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // POST /api/auth/register (admin only)
-router.post('/register', protect, authorizeRoles('admin'), registerUser);
+// router.post('/register', protect, authorizeRoles('admin'), registerUser);
+router.post('/register',  registerUser);
 
 // POST /api/auth/login
 router.post('/login', loginUser);
@@ -26,7 +27,8 @@ router.get('/profile', protect, (req, res) => {
 });
 
 // GET /api/auth/users (admin only) - fetch all users
-router.get('/users', protect, authorizeRoles('admin'), getAllUsers);
+// router.get('/users', protect, authorizeRoles('admin'), getAllUsers);
+router.get('/users', getAllUsers);
 
 // DELETE /api/auth/users/:id (admin only) - delete user by id
 router.delete('/users/:id', protect, authorizeRoles('admin'), deleteUser);

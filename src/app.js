@@ -14,20 +14,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// ✅ CORS
+app.use(cors({
+  origin: "*",        // sabko allow
+  methods: ["GET","POST","PUT","DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 
-// Connect to MongoDB
+// ✅ Connect to MongoDB
 connectDB();
 
-// Routes
+// ✅ Routes
 app.use('/api/cases', casesRoutes);
 app.use('/api/clerks',  clerksRoutes);
 app.use('/api/courtrooms', courtroomsRoutes);
 app.use('/api/judges', judgesRoutes);
 app.use('/api/lawyers', lawyersRoutes);
 app.use('/api/users', authRoutes);
-
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
