@@ -5,36 +5,65 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
+      required: [true, 'Username is required'],
       trim: true,
+      minlength: [3, 'Username must be at least 3 characters long']
     },
     email: {
       type: String,
-      required: true,
+      required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
+      validate: {
+        validator: function(v) {
+          return /^\S+@\S+\.\S+$/.test(v);
+        },
+        message: 'Please provide a valid email address'
+      }
     },
     number: {
       type: String,
-      required: true,
+      required: [true, 'Phone number is required'],
       trim: true,
-      match: [/^\d{10}$/, 'Please provide a valid 10-digit phone number'],
+      validate: {
+        validator: function(v) {
+          return /^\d{10}$/.test(v);
+        },
+        message: 'Please provide a valid 10-digit phone number'
+      }
     },
     password: {
       type: String,
-      required: true,
-      minlength: 6,
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters long'],
       select: false,
+      validate: {
+        validator: function(v) {
+          // At least one uppercase, one lowercase, one number
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/.test(v);
+        },
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      }
     },
     role: {
       type: String,
-      enum: ['admin', 'judge', 'lawyer','clerk'],
-      default: 'lawyer',
+      enum: {
+        values: ['admin', 'judge', 'lawyer', 'clerk'],
+        message: '{VALUE} is not a valid role'
+      },
+      required: [true, 'Role is required']
     },
+    isActive: {
+      type: Boolean,
+      default: true
+    }
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
 
 // Hash password before saving if modified

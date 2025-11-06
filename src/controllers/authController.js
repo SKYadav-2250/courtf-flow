@@ -1,63 +1,125 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import mongoose from 'mongoose';
 
-
-
+const VALID_ROLES = ['admin', 'judge', 'lawyer', 'clerk'];
 
 function generateToken(user) {
-  return jwt.sign(
-    {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      number:user.number,
-      role: user.role,
-    },
-   process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
-  );
+  try {
+    if (!process.env.JWT_SECRET || !process.env.JWT_EXPIRES_IN) {
+      throw new Error('JWT configuration is missing');
+    }
+
+    return jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        number: user.number,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+  } catch (error) {
+    throw new Error('Failed to generate authentication token');
+  }
 }
 
 
 export const registerUser = async (req, res) => {
-  try {
-    const { username, email,number, password, role } = req.body;
-    console.log(`user  ${JSON.stringify(req.user)}`);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    if (!username || !email || !password || !number) {
-      return res.status(400).json({ success: false, message: 'Username, email, and password are required.' });
+  try {
+    const { username, email, number, password, role } = req.body;
+
+    // Validate required fields
+    if (!username || !email || !password || !number || !role) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'All fields (username, email, password, number, and role) are required.' 
+      });
     }
 
+    // Validate role
+    if (!VALID_ROLES.includes(role)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` 
+      });
+    }
+
+    // Check for existing user with email or number
     const existingUser = await User.findOne({
-      $or: [{ email }]
+      $or: [
+        { email },
+        { number },
+        { username }
+      ]
     });
 
-    
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'user number or email already exists.' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'User with this username, email, or phone number already exists.' 
+      });
     }
-    
- 
-    const newUser = await User.create({ username, email, password, number, role });
-   
 
-    const token = generateToken(newUser);
+    // Create new user
+    const newUser = await User.create([{
+      username,
+      email,
+      password,
+      number,
+      role
+    }], { session });
 
+    // Generate token
+    const token = generateToken(newUser[0]);
+
+    await session.commitTransaction();
+
+    // Return success response
     return res.status(201).json({
       success: true,
       message: 'User registered successfully.',
       token,
       user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-        number:newUser.number,
-        createdAt: newUser.createdAt,
+        id: newUser[0]._id,
+        username: newUser[0].username,
+        email: newUser[0].email,
+        role: newUser[0].role,
+        number: newUser[0].number,
+        createdAt: newUser[0].createdAt,
       },
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Registration failed.', error: error.message });
+    await session.abortTransaction();
+    
+    // Handle specific error types
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        errors: Object.values(error.errors).map(err => err.message) 
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Duplicate field value entered' 
+      });
+    }
+
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Registration failed.', 
+      error: error.message 
+    });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -65,38 +127,70 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(`email  ${email} and password  ${password}`);
 
+    // Validate input
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and password are required.' 
+      });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    // Find user and include password for comparison
+    const user = await User.findOne({ email, isActive: true }).select('+password');
+    
+    // Generic error message for security
+    const invalidCredentialsMessage = 'Invalid email or password.';
+
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+      return res.status(401).json({ 
+        success: false, 
+        message: invalidCredentialsMessage 
+      });
     }
 
+    // Compare password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+      return res.status(401).json({ 
+        success: false, 
+        message: invalidCredentialsMessage 
+      });
     }
 
+    // Generate authentication token
     const token = generateToken(user);
+
+    // Remove sensitive data from response
+    const userResponse = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      number: user.number,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
+
+    // Set cookie with token
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
 
     return res.status(200).json({
       success: true,
       message: 'Logged in successfully.',
       token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt,
-      },
+      user: userResponse,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Login failed.', error: error.message });
+    console.error('Login error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'An error occurred during login. Please try again.' 
+    });
   }
 };
 
