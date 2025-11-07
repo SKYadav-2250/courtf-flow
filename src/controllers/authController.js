@@ -196,52 +196,191 @@ export const loginUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    // require authentication + admin role
-    // if (!req.user || req.user.role !== 'admin') {
-    //   return res.status(403).json({ success: false, message: 'Forbidden: admin only' });
-    // }
+    // Require authentication + admin role
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
 
-    const users = await User.find().select('-password');
-    return res.status(200).json({ success: true, count: users.length, users });
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Access denied. Admin privileges required.' 
+      });
+    }
+
+    const users = await User.find({ isActive: true })
+      .select('-password -__v')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({ 
+      success: true, 
+      count: users.length, 
+      users 
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to fetch users.', error: error.message });
+    console.error('Error fetching users:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch users. Please try again.' 
+    });
   }
 };
 
 export const deleteUser = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    // admin only
-    if (!req.user || req.user.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Forbidden: admin only' });
+    // Verify authentication and admin role
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
+
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Access denied. Admin privileges required.' 
+      });
     }
 
     const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found.' });
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid user ID format' 
+      });
     }
 
-    return res.status(200).json({ success: true, message: 'User deleted successfully.' });
+    // Find user first to get their role
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // Prevent deleting the last admin
+    if (user.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Cannot delete the last admin user' 
+        });
+      }
+    }
+
+    // Soft delete by setting isActive to false
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true, session }
+    );
+
+    // If user is a judge/lawyer/clerk, also update their role-specific record
+    if (['judge', 'lawyer', 'clerk'].includes(user.role)) {
+      const Model = mongoose.model(user.role.charAt(0).toUpperCase() + user.role.slice(1));
+      await Model.findOneAndUpdate(
+        { userId: id },
+        { isActive: false },
+        { session }
+      );
+    }
+
+    await session.commitTransaction();
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'User deactivated successfully' 
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to delete user.', error: error.message });
+    await session.abortTransaction();
+    console.error('Error deleting user:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to delete user. Please try again.' 
+    });
+  } finally {
+    session.endSession();
   }
 };
 
 export const deleteMe = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
+    // Check authentication
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Not authenticated.' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
     }
 
-    const deleted = await User.findByIdAndDelete(req.user.id);
-    if (!deleted) {
-      return res.status(404).json({ success: false, message: 'User not found.' });
+    // Prevent admin from deleting their account if they're the last admin
+    if (req.user.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Cannot delete the last admin account' 
+        });
+      }
     }
 
-    return res.status(200).json({ success: true, message: 'Your account has been deleted.' });
+    // Soft delete by setting isActive to false
+    const updated = await User.findByIdAndUpdate(
+      req.user.id,
+      { isActive: false },
+      { new: true, session }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // If user is a judge/lawyer/clerk, also update their role-specific record
+    if (['judge', 'lawyer', 'clerk'].includes(req.user.role)) {
+      const Model = mongoose.model(req.user.role.charAt(0).toUpperCase() + req.user.role.slice(1));
+      await Model.findOneAndUpdate(
+        { userId: req.user.id },
+        { isActive: false },
+        { session }
+      );
+    }
+
+    await session.commitTransaction();
+
+    // Clear the authentication cookie
+    res.clearCookie('token');
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Your account has been deactivated successfully' 
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Failed to delete account.', error: error.message });
+    await session.abortTransaction();
+    console.error('Error deactivating account:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to deactivate account. Please try again.' 
+    });
+  } finally {
+    session.endSession();
   }
 };
 
