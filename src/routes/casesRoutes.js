@@ -12,8 +12,8 @@ import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 const casesController = new CasesController(Case);
 
 router.post('/', protect, authorizeRoles('admin', 'clerk'), casesController.createCase.bind(casesController));
-router.get('/', protect, authorizeRoles('admin', 'clerk'), casesController.getCases.bind(casesController));
-router.get('/:id', protect, authorizeRoles('admin', 'clerk'), casesController.getCaseById.bind(casesController));
+router.get('/', casesController.getCases.bind(casesController));
+router.get('/:id', protect, casesController.getCaseById.bind(casesController));
 router.put('/:id', protect, authorizeRoles('admin', 'clerk'), casesController.updateCase.bind(casesController));
 router.delete('/:id', protect, authorizeRoles('admin', 'clerk'), casesController.deleteCase.bind(casesController));
 

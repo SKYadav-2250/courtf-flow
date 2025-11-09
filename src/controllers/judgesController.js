@@ -23,9 +23,9 @@ class JudgesController {
 
   async createJudge(req, res) {
     try {
-      const { name, court, experience, contact, password } = req.body;
+      const { name, court, experience, contact, password ,email } = req.body;
 
-      if (!name || !court || !experience || !contact || !password) {
+      if (!name || !court || !experience || !contact || !password || !email) {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
@@ -38,16 +38,19 @@ class JudgesController {
         name,
         court,
         experience,
-        contact
+        password,
+        contact,
+        email
       });
       await judge.save();
 
       // ✅ Add judge to User model for login
       const newUser = new User({
         username: name,
-        email: `${judgeId}@court.com`, // Generate a dummy email if not provided
+        email: email, // Generate a dummy email if not provided
         number: contact,
-        password,
+
+        password:password,
         role: 'judge'
       });
       await newUser.save();

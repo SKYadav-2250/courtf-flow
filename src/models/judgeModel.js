@@ -5,7 +5,7 @@ const judgeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   court: String,
   experience: Number,
-  number: {
+  contact: {
     type: String,
     required: true,
     trim: true,
@@ -18,8 +18,6 @@ const judgeSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6,
-    select: false,
   },
   email: {
     type: String,

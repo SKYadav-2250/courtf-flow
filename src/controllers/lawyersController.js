@@ -23,9 +23,9 @@ class LawyersController {
   // ✅ Create Lawyer with unique ID
   async createLawyer(req, res) {
     try {
-      const { name, barNumber, email, phone, password, specialization } = req.body;
+      const { name, barNumber, email, number, password, specialization } = req.body;
 
-      if (!name || !barNumber || !email || !phone || !password || !specialization) {
+      if (!name || !barNumber || !email || !number || !password || !specialization) {
         return res.status(400).json({ message: 'All fields are required' });
       }
 
@@ -48,7 +48,8 @@ class LawyersController {
         name,
         barNumber,
         email,
-        phone,
+        number,
+        password,
         specialization
       });
 
@@ -58,7 +59,7 @@ class LawyersController {
       const newUser = new User({
         username: name,
         email,
-        number: phone,
+         number,
         password,
         role: 'lawyer'
       });

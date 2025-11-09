@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
+import bcrypt from "bcrypt";
 
 const VALID_ROLES = ['admin', 'judge', 'lawyer', 'clerk'];
 
@@ -34,7 +35,7 @@ export const registerUser = async (req, res) => {
   try {
     const { username, email, number, password, role } = req.body;
 
-    // Validate required fields
+   
     if (!username || !email || !password || !number || !role) {
       return res.status(400).json({ 
         success: false, 
@@ -127,93 +128,61 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(`email  ${email} and password  ${password}`);
 
-    // Validate input
     if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email and password are required.' 
-      });
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
-    // Find user and include password for comparison
-    const user = await User.findOne({ email, isActive: true }).select('+password');
-    
-    // Generic error message for security
-    const invalidCredentialsMessage = 'Invalid email or password.';
-
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: invalidCredentialsMessage 
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 
-    // Compare password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: invalidCredentialsMessage 
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 
-    // Generate authentication token
     const token = generateToken(user);
-
-    // Remove sensitive data from response
-    const userResponse = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      number: user.number,
-      role: user.role,
-      createdAt: user.createdAt,
-    };
-
-    // Set cookie with token
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    });
 
     return res.status(200).json({
       success: true,
       message: 'Logged in successfully.',
       token,
-      user: userResponse,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+      },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'An error occurred during login. Please try again.' 
-    });
+    return res.status(500).json({ success: false, message: 'Login failed.', error: error.message });
   }
 };
-
 export const getAllUsers = async (req, res) => {
   try {
+    console.log('request is coming');
     // Require authentication + admin role
-    if (!req.user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Authentication required' 
-      });
-    }
+    // if (!req.user) {
+    //   return res.status(401).json({ 
+    //     success: false, 
+    //     message: 'Authentication required' 
+    //   });
+    // }
 
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Access denied. Admin privileges required.' 
-      });
-    }
+    // if (req.user.role !== 'admin') {
+    //   return res.status(403).json({ 
+    //     success: false, 
+    //     message: 'Access denied. Admin privileges required.' 
+    //   });
+    // }
 
-    const users = await User.find({ isActive: true })
-      .select('-password -__v')
-      .sort({ createdAt: -1 });
+const users = await User.find()
+  .select("-password -__v")
+  .sort({ createdAt: -1 });
 
     return res.status(200).json({ 
       success: true, 

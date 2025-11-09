@@ -8,14 +8,16 @@ class ClerksController {
   // ➤ Create Clerk
   async createClerk(req, res) {
     try {
-      const { name, email, phone, password, assignedCourtroom } = req.body;
+      const { name, email, number, password, assignedCourtroom } = req.body;
 
-      if (!name || !email || !phone || !password)
+      if (!name || !email || !number || !password){
+
         return res.status(400).json({ message: 'Name, email, phone, and password are required' });
+      }
 
       // ✅ Check duplicate email or phone
       const existingClerk = await this.ClerkModel.findOne({
-        $or: [{ email }, { phone }]
+        $or: [{ email }, { number }]
       });
       if (existingClerk) {
         return res.status(400).json({ message: 'Clerk with this email or phone already exists' });
@@ -31,7 +33,8 @@ class ClerksController {
         clerkId,
         name,
         email,
-        phone,
+        number,
+        password,
         assignedCourtroom
       });
       await newClerk.save();
@@ -40,7 +43,7 @@ class ClerksController {
       const newUser = new User({
         username: name,
         email,
-        number: phone,
+        number,
         password,
         role: 'clerk'
       });

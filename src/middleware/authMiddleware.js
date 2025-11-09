@@ -7,6 +7,8 @@ export const protect = async (req, res, next) => {
     const authHeader = req.headers.authorization || '';
     const [scheme, token] = authHeader.split(' ');
 
+    console.log('requet is coming');
+
     
 
     if (scheme !== 'Bearer' || !token) {
