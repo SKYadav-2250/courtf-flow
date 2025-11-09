@@ -53,6 +53,35 @@ class CasesController {
     }
   }
 
+
+    async getTodayHearingCases(req, res) {
+    try {
+      // get today's date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const cases = await this.CaseModel.find({
+        nextDate: { $gte: today, $lt: tomorrow }
+      })
+        .populate('judge', 'judgeId name email phone')
+        .populate('filingLawyer', 'lawyerId name email phone specialization')
+        .populate('defendingLawyer', 'lawyerId name email phone specialization')
+        .populate('courtroom', 'courtroomId name location capacity');
+
+      if (!cases.length) {
+        return res.status(404).json({ message: 'No cases for today' });
+      }
+
+      res.status(200).json(cases);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+
   // ✅ Get case by ID (with details)
   async getCaseById(req, res) {
     try {
