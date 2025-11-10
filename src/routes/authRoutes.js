@@ -11,8 +11,8 @@ import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 // POST /api/auth/register (admin only)
-// router.post('/register', protect, authorizeRoles('admin'), registerUser);
-router.post('/register',  registerUser);
+router.post('/register', protect, authorizeRoles('admin'), registerUser);
+// router.post('/register',  registerUser);
 
 // POST /api/auth/login
 router.post('/login', loginUser);
