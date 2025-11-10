@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3000;
 
 // ✅ CORS
 app.use(cors({
-  origin: "*",        // sabko allow
+  origin: "*",
   methods: ["GET","POST","PUT","DELETE"],
   credentials: true
 }));
@@ -26,6 +26,11 @@ app.use(express.json());
 // ✅ Connect to MongoDB
 connectDB();
 
+// ✅ Health Route
+app.get("/", (req, res) => {
+  res.send("Court Flow API is running...");
+});
+
 // ✅ Routes
 app.use('/api/cases', casesRoutes);
 app.use('/api/clerks',  clerksRoutes);
@@ -34,6 +39,7 @@ app.use('/api/judges', judgesRoutes);
 app.use('/api/lawyers', lawyersRoutes);
 app.use('/api/users', authRoutes);
 
+// ✅ Listen
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
